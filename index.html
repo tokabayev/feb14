@@ -82,8 +82,14 @@
             font-size: 16px;
             border-radius: 10px;
             cursor: pointer;
-            position: absolute;
-            transition: all 0.1s ease;
+            position: fixed;
+            transition: none;
+            z-index: 1000;
+            pointer-events: auto;
+        }
+
+        .btn-no.flying {
+            animation: none;
         }
 
         .success-container {
@@ -131,7 +137,7 @@
 <body>
     <div class="container">
         <div class="form-content" id="formContent">
-            <img src="https://images.unsplash.com/photo-1653581483746-8b0e572f1e71?w=400&h=400&fit=crop" 
+            <img src="https://media1.tenor.com/m/6kS_meidenMAAAAC/hh.gif" 
                  alt="Капибара" 
                  class="capybara-img">
             <div class="question">Азиза, будете ли вы моей Валентинкой?</div>
@@ -156,65 +162,146 @@
         const formContent = document.getElementById('formContent');
         const successContainer = document.getElementById('successContainer');
 
-        // Function to move the "No" button away from cursor
+        let buttonX = 0;
+        let buttonY = 0;
+        let isFlying = false;
+        let detectionRadius = 200; // Distance from which button starts fleeing
+
+        // Initialize button position next to Yes button
+        function initButtonPosition() {
+            const yesRect = btnYes.getBoundingClientRect();
+            buttonX = yesRect.right + 20;
+            buttonY = yesRect.top;
+            updateButtonPosition();
+        }
+
+        // Update button visual position
+        function updateButtonPosition() {
+            btnNo.style.left = buttonX + 'px';
+            btnNo.style.top = buttonY + 'px';
+        }
+
+        // Get a random safe position on the page
+        function getRandomPosition() {
+            const padding = 50;
+            const maxX = window.innerWidth - btnNo.offsetWidth - padding;
+            const maxY = window.innerHeight - btnNo.offsetHeight - padding;
+            
+            return {
+                x: padding + Math.random() * (maxX - padding),
+                y: padding + Math.random() * (maxY - padding)
+            };
+        }
+
+        // Smooth animation to new position
+        function flyToPosition(targetX, targetY, duration = 300) {
+            const startX = buttonX;
+            const startY = buttonY;
+            const startTime = Date.now();
+            
+            isFlying = true;
+            btnNo.classList.add('flying');
+
+            function animate() {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                // Easing function for smooth movement
+                const easeProgress = 1 - Math.pow(1 - progress, 3);
+                
+                buttonX = startX + (targetX - startX) * easeProgress;
+                buttonY = startY + (targetY - startY) * easeProgress;
+                
+                updateButtonPosition();
+                
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                } else {
+                    isFlying = false;
+                }
+            }
+            
+            animate();
+        }
+
+        // Progressive detection - gets more sensitive over time
+        let attemptCount = 0;
+        
         function moveButton(e) {
-            const btnRect = btnNo.getBoundingClientRect();
-            const containerRect = buttonsContainer.getBoundingClientRect();
+            if (isFlying) return;
             
             const mouseX = e.clientX;
             const mouseY = e.clientY;
             
-            const btnCenterX = btnRect.left + btnRect.width / 2;
-            const btnCenterY = btnRect.top + btnRect.height / 2;
+            const btnCenterX = buttonX + btnNo.offsetWidth / 2;
+            const btnCenterY = buttonY + btnNo.offsetHeight / 2;
             
             const distanceX = mouseX - btnCenterX;
             const distanceY = mouseY - btnCenterY;
             const distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
             
-            // If mouse is within 150px of the button, move it away
-            if (distance < 150) {
-                // Calculate new position (move away from mouse)
+            // Progressive difficulty - button gets more sensitive with each attempt
+            const currentRadius = detectionRadius + (attemptCount * 30);
+            
+            if (distance < currentRadius) {
+                attemptCount++;
+                
+                // Calculate direction away from mouse
                 const angle = Math.atan2(distanceY, distanceX);
-                const moveDistance = 250;
                 
-                let newLeft = btnRect.left - containerRect.left - Math.cos(angle) * moveDistance;
-                let newTop = btnRect.top - containerRect.top - Math.sin(angle) * moveDistance;
+                // Get a random position, preferably far from the mouse
+                let newPos = getRandomPosition();
                 
-                // Keep button within reasonable bounds
-                const maxLeft = window.innerWidth - btnRect.width - 50;
-                const maxTop = window.innerHeight - btnRect.height - 50;
+                // Try to get a position that's far from the mouse
+                for (let i = 0; i < 5; i++) {
+                    const testPos = getRandomPosition();
+                    const testDist = Math.sqrt(
+                        Math.pow(testPos.x - mouseX, 2) + 
+                        Math.pow(testPos.y - mouseY, 2)
+                    );
+                    const currentDist = Math.sqrt(
+                        Math.pow(newPos.x - mouseX, 2) + 
+                        Math.pow(newPos.y - mouseY, 2)
+                    );
+                    
+                    if (testDist > currentDist) {
+                        newPos = testPos;
+                    }
+                }
                 
-                newLeft = Math.max(-100, Math.min(maxLeft - containerRect.left, newLeft));
-                newTop = Math.max(-50, Math.min(maxTop - containerRect.top, newTop));
-                
-                btnNo.style.left = newLeft + 'px';
-                btnNo.style.top = newTop + 'px';
+                // Faster movement as attempts increase
+                const animationSpeed = Math.max(150, 300 - attemptCount * 10);
+                flyToPosition(newPos.x, newPos.y, animationSpeed);
             }
         }
 
-        // Add mousemove listener to the entire document
+        // Track mouse movement
         document.addEventListener('mousemove', moveButton);
 
         // Prevent clicking the "No" button
         btnNo.addEventListener('click', (e) => {
             e.preventDefault();
+            e.stopPropagation();
+            return false;
+        });
+        
+        // Also prevent mousedown/mouseup
+        btnNo.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
             return false;
         });
 
         // Handle "Yes" button click
         btnYes.addEventListener('click', () => {
+            document.removeEventListener('mousemove', moveButton);
+            btnNo.style.display = 'none';
             formContent.classList.add('hidden');
             successContainer.classList.add('show');
         });
 
-        // Set initial position for "No" button (positioned to the right of Yes button)
-        setTimeout(() => {
-            const yesRect = btnYes.getBoundingClientRect();
-            const containerRect = buttonsContainer.getBoundingClientRect();
-            btnNo.style.left = (yesRect.right - containerRect.left + 20) + 'px';
-            btnNo.style.top = '50%';
-            btnNo.style.transform = 'translateY(-50%)';
-        }, 10);
+        // Initialize button position after page loads
+        setTimeout(initButtonPosition, 100);
     </script>
 </body>
 </html>
