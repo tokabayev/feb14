@@ -244,7 +244,8 @@
             const distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
             
             // Progressive difficulty - button gets more sensitive with each attempt
-            const currentRadius = detectionRadius + (attemptCount * 30);
+            // But cap at 350px to prevent it from being too sensitive
+            const currentRadius = Math.min(350, detectionRadius + (attemptCount * 20));
             
             // ONLY move if mouse is within detection radius
             if (distance < currentRadius) {
