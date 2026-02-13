@@ -137,8 +137,8 @@
 <body>
     <div class="container">
         <div class="form-content" id="formContent">
-            <img src="https://media1.tenor.com/m/6kS_meidenMAAAAC/hh.gif" 
-                 alt="Капибара" 
+            <img src="https://media1.tenor.com/m/6kS_meidenMAAAAC/hh.gif"
+                 alt="Капибара"
                  class="capybara-img">
             <div class="question">Адиюша, будете ли вы моей Валентинкой?</div>
             <div class="buttons-container" id="buttonsContainer">
@@ -146,11 +146,11 @@
                 <button class="btn-no" id="btnNo">Нет</button>
             </div>
         </div>
-        
+
         <div class="success-container" id="successContainer">
             <div class="success-text">УРАААААААА</div>
-            <img src="https://media.tenor.com/DpJdyKQKgYkAAAAj/cat-jump.gif" 
-                 alt="Happy Cat" 
+            <img src="https://media.tenor.com/DpJdyKQKgYkAAAAj/cat-jump.gif"
+                 alt="Happy Cat"
                  class="cat-gif">
         </div>
     </div>
@@ -182,7 +182,7 @@
             const padding = 50;
             const maxX = window.innerWidth - btnNo.offsetWidth - padding;
             const maxY = window.innerHeight - btnNo.offsetHeight - padding;
-            
+
             return {
                 x: padding + Math.random() * (maxX - padding),
                 y: padding + Math.random() * (maxY - padding)
@@ -193,28 +193,28 @@
             const startX = buttonX;
             const startY = buttonY;
             const startTime = Date.now();
-            
+
             isFlying = true;
             btnNo.classList.add('flying');
 
             function animate() {
                 const elapsed = Date.now() - startTime;
                 const progress = Math.min(elapsed / duration, 1);
-                
+
                 const easeProgress = 1 - Math.pow(1 - progress, 3);
-                
+
                 buttonX = startX + (targetX - startX) * easeProgress;
                 buttonY = startY + (targetY - startY) * easeProgress;
-                
+
                 updateButtonPosition();
-                
+
                 if (progress < 1) {
                     requestAnimationFrame(animate);
                 } else {
                     isFlying = false;
                 }
             }
-            
+
             animate();
         }
 
@@ -237,7 +237,7 @@
             e.stopPropagation();
             return false;
         });
-        
+
         btnNo.addEventListener('mousedown', (e) => {
             e.preventDefault();
             e.stopPropagation();
