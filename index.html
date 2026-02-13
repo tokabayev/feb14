@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Азиза отвечай</title>
+    <title>Адиюша отвечай</title>
     <style>
         * {
             margin: 0;
@@ -140,7 +140,7 @@
             <img src="https://media1.tenor.com/m/6kS_meidenMAAAAC/hh.gif" 
                  alt="Капибара" 
                  class="capybara-img">
-            <div class="question">Азиза, будете ли вы моей Валентинкой?</div>
+            <div class="question">Адиюша, будете ли вы моей Валентинкой?</div>
             <div class="buttons-container" id="buttonsContainer">
                 <button class="btn-yes" id="btnYes">Да</button>
                 <button class="btn-no" id="btnNo">Нет</button>
@@ -165,7 +165,6 @@
         let buttonX = 0;
         let buttonY = 0;
         let isFlying = false;
-        let detectionRadius = 200; // Distance from which button starts fleeing
 
         function initButtonPosition() {
             const yesRect = btnYes.getBoundingClientRect();
@@ -220,48 +219,18 @@
         }
 
         let attemptCount = 0;
-        
-        function moveButton(e) {
+
+        function moveButton() {
             if (isFlying) return;
-            
-            const mouseX = e.clientX;
-            const mouseY = e.clientY;
-            
-            const btnCenterX = buttonX + btnNo.offsetWidth / 2;
-            const btnCenterY = buttonY + btnNo.offsetHeight / 2;
-            
-            const distanceX = mouseX - btnCenterX;
-            const distanceY = mouseY - btnCenterY;
-            const distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
-            
-            // cap the radius
-            const currentRadius = Math.min(200, detectionRadius + (attemptCount * 20));
-            
-            if (distance < currentRadius) {
-                attemptCount++;
-                
-                let newPos = getRandomPosition();
-                let bestDistance = 0;
-                
-                for (let i = 0; i < 5; i++) {
-                    const testPos = getRandomPosition();
-                    const testDist = Math.sqrt(
-                        Math.pow(testPos.x - mouseX, 2) + 
-                        Math.pow(testPos.y - mouseY, 2)
-                    );
-                    
-                    if (testDist > bestDistance) {
-                        bestDistance = testDist;
-                        newPos = testPos;
-                    }
-                }
-                
-                const animationSpeed = Math.max(150, 300 - attemptCount * 10);
-                flyToPosition(newPos.x, newPos.y, animationSpeed);
-            }
+
+            attemptCount++;
+
+            let newPos = getRandomPosition();
+            const animationSpeed = Math.max(150, 300 - attemptCount * 10);
+            flyToPosition(newPos.x, newPos.y, animationSpeed);
         }
 
-        document.addEventListener('mousemove', moveButton);
+        btnNo.addEventListener('mouseenter', moveButton);
 
         btnNo.addEventListener('click', (e) => {
             e.preventDefault();
@@ -276,7 +245,7 @@
         });
 
         btnYes.addEventListener('click', () => {
-            document.removeEventListener('mousemove', moveButton);
+            btnNo.removeEventListener('mouseenter', moveButton);
             btnNo.style.display = 'none';
             formContent.classList.add('hidden');
             successContainer.classList.add('show');
